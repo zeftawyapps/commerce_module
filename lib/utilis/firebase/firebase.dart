@@ -59,16 +59,16 @@ class FirebaseLoadingData {
     });
   }
   Stream<T> streamSingleData<T>({
-    required String path,
+    required String path,required String id ,
     required T Function(Map<String, dynamic>? data, String documentId) builder,
   }) {
-    final reference = _fireStore.doc(path);
+    final reference = _fireStore.collection(path).doc(id);
     final snapshots = reference.snapshots();
     return snapshots.map((snapshot) => builder(snapshot.data(), snapshot.id));
   }
   Future<List<T>> loadDataWithQuery<T>({
     required String path,
-    required T Function(Map<String, dynamic>? data, String documentId) builder,
+    required T Function(Map<String, dynamic>? jsondata, String docId) builder,
     Query Function(Query query)? queryBuilder,
     int Function(T lhs, T rhs)? sort,
   }) {
@@ -107,7 +107,9 @@ class FirebaseLoadingData {
     return getlist;
   }
 
-  Future<Map<String, dynamic>?> loadSingleDocData(
+ // load quiz data
+
+   Future<Map<String, dynamic>?> loadSingleDocData(
       String collectin, String id) async {
     CollectionReference firebaseCollection;
     firebaseCollection = FirebaseFirestore.instance.collection(collectin);
@@ -115,4 +117,6 @@ class FirebaseLoadingData {
 
     return doc.data() as Map<String, dynamic>;
   }
+
+
 }

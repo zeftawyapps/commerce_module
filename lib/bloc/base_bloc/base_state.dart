@@ -1,7 +1,7 @@
  import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../utilis/models/base_model.dart';
+import '../../utilis/models/remote_base_model.dart';
 
   part 'base_state.freezed.dart';
 

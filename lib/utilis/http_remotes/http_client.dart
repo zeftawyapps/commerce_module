@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:commerce_module/utilis/result/result.dart';
+ import 'package:commerce_module/utilis/models/staus_model.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -8,11 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
+
 import '../../https/commerce_http_urls.dart';
-import '../errors/http_errors/bass_errors.dart';
-import '../errors/http_errors/errors/bad_request_error.dart';
-import '../errors/http_errors/errors/cancel_error.dart';
-import '../errors/http_errors/errors/conflict_error.dart';
 import '../errors/http_errors/errors/connection_error.dart';
 import '../errors/http_errors/errors/forbidden_error.dart';
 import '../errors/http_errors/errors/format_error.dart';
@@ -22,32 +19,41 @@ import '../errors/http_errors/errors/socket_error.dart';
 import '../errors/http_errors/errors/timeout_error.dart';
 import '../errors/http_errors/errors/unauthorized_error.dart';
 import '../errors/http_errors/errors/unknown_error.dart';
-import '../models/base_model.dart';
+import '../models/remote_base_model.dart';
+import '../result/result.dart';
 import 'http_methos_enum.dart';
 
-class HttpClient {
+class CommreceHttpClient {
   static late Dio _client;
 
   Dio get instance => _client;
   String? baseUrl;
   bool? userToken;
 
-  HttpClient({this.baseUrl   , userToken = false}) {
-    baseUrl = CommerceHttpUrls().BaseUrl;
+  CommreceHttpClient({this.baseUrl   , userToken = false}) {
+    baseUrl = CommerceBaseUrlEnveiroment().baseUrl!;
     BaseOptions _options = BaseOptions(
-      connectTimeout: 30000,
-      receiveTimeout: 30000,
-      sendTimeout: 30000,
+      connectTimeout: Duration(milliseconds: 30000),
+      receiveTimeout: Duration(milliseconds: 30000),
+      sendTimeout: Duration(milliseconds: 30000),
       responseType: ResponseType.json,
       baseUrl: baseUrl!,
     );
     _client = Dio(_options);
     _client.interceptors.add(PrettyDioLogger());
     if (userToken) {
-      String authorizationHeader = "Basic " +
-         CommerceHttpHeader().usertoken;
+      var headderAuth = CommerceHttpHeader();
+      String authorizationHeader =
+          headderAuth.usertoken;
       _client.options.headers["Authorization"] = authorizationHeader;
       _client.options.headers["Content-Type"] = "application/json";
+
+      _client.options.headers["Accept"] = "*/*";
+      _client.options.headers["Accept-Encoding"] = "gzip, deflate, br";
+      _client.options.headers["Connection"] = "keep-alive";
+      _client.options.headers["Content-Length"] = "0";
+      _client.options.headers["Access-Control-Allow-Origin"] = "*";
+
       // _client.options.headers["Content-Type"] = "application/json";
     }
   }
@@ -101,15 +107,15 @@ class HttpClient {
           break;
       }
 
-        return response.data;
-      }  catch (e) {
+      return response.data;
+    }  catch (e) {
 
-        throw e ;
-      }
+      throw e ;
     }
+  }
 
 
-  Future<CommerceResult<RemoteBaseModel, T>> sendRequestResult<T>({
+  Future<CommerceResult<RemoteBaseModel, Map<String , dynamic> >> sendRequestResultWithMap ({
     required HttpMethod method,
     required String url,
     Map<String, String>? headers,
@@ -118,7 +124,7 @@ class HttpClient {
     required CancelToken cancelToken,
   }) async {
     // Get the response from the server
-    Response response;
+    Response<Map<String , dynamic>> response;
     try {
       switch (method) {
         case HttpMethod.GET:
@@ -161,7 +167,9 @@ class HttpClient {
         /// dismiss progress dialog
 
         // Get the decoded json
-        return CommerceResult.data (response.data!);
+        print("response.data ${response.data} ");
+        Map<String ,dynamic> data = { "status" : "success" , "data": response.data??"" } ;
+        return CommerceResult().data (  data );
       } on FormatException catch (e) {
         /// dismiss progress dialog
 
@@ -171,15 +179,16 @@ class HttpClient {
         /// dismiss progress dialog
 
         debugPrint(e.toString());
-        return CommerceResult. error(RemoteBaseModel());
+        return CommerceResult. error(RemoteBaseModel(error: e , message: e.toString() , status:  StatusModel.error  , data:  null ));
       }
     }
     // Handling errors
     on DioError catch (e) {
       /// dismiss progress dialog
 
-      print("e.response ${e.error}");
-      return CommerceResult. error(RemoteBaseModel.fromJson(e.response?.data));
+      print("e.response ${e}");
+      var error = {"massage": e };
+      return CommerceResult. error(RemoteBaseModel(message: error["massage"]!.message , status: StatusModel.error , data:  "null"));
     }
 
     // Couldn't reach out the server
@@ -198,7 +207,10 @@ class HttpClient {
       return CommerceResult. error(RemoteBaseModel(message: e.toString()));
     }
   }
-  Future<Either<RemoteBaseModel, T>> sendRequest<T>({
+
+
+
+  Future<CommerceResult<RemoteBaseModel,  RemoteBaseModel >> sendRequest ({
     required HttpMethod method,
     required String url,
     Map<String, String>? headers,
@@ -247,20 +259,110 @@ class HttpClient {
           break;
       }
       try {
-        /// dismiss progress dialog
-
-        // Get the decoded json
-        return Right(response.data!);
+       var data = RemoteBaseModel(data: response.data??"" , status: StatusModel.success ,message: "" );
+        return CommerceResult.data ( data );
       } on FormatException catch (e) {
         /// dismiss progress dialog
 
         debugPrint(e.toString());
-        return Left(RemoteBaseModel(message: e.message));
+        return  CommerceResult. error (RemoteBaseModel(message: e.message));
       } catch (e) {
         /// dismiss progress dialog
 
         debugPrint(e.toString());
-        return Left(RemoteBaseModel());
+        return CommerceResult. error(RemoteBaseModel(error: e , message: e.toString() , status: StatusModel.error  , data:  null ));
+      }
+    }
+    // Handling errors
+    on DioError catch (e) {
+      /// dismiss progress dialog
+
+      print("e.response ${e}");
+      var error = {"massage": e };
+      return CommerceResult. error(RemoteBaseModel(message: error["massage"]!.message , status: StatusModel.error , data:  "null"));
+    }
+
+    // Couldn't reach out the server
+    on SocketException catch (e) {
+      /// dismiss progress dialog
+
+      return CommerceResult. error(RemoteBaseModel(message: e.message));
+    } on HttpException catch (e) {
+      /// dismiss progress dialog
+
+      return CommerceResult. error(RemoteBaseModel(message: e.message));
+    } catch (e, s) {
+      /// dismiss progress dialog
+
+      print('catch error s$s');
+      return CommerceResult. error(RemoteBaseModel(message: e.toString()));
+    }
+  }
+
+
+  Future< Map<String ,dynamic >> sendRequestJsonMap({
+    required HttpMethod method,
+    required String url,
+    Map<String, String>? headers,
+    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? body,
+    required CancelToken cancelToken,
+  }) async {
+    // Get the response from the server
+    Response<Map<String , dynamic >> response;
+    try {
+      switch (method) {
+        case HttpMethod.GET:
+          response = await _client.get(
+            url,
+            queryParameters: queryParameters,
+            options: Options(headers: headers),
+            cancelToken: cancelToken,
+          );
+          break;
+        case HttpMethod.POST:
+          response = await _client.post(
+            url,
+            data: body,
+            queryParameters: queryParameters,
+            options: Options(headers: headers),
+            cancelToken: cancelToken,
+          );
+          break;
+        case HttpMethod.PUT:
+          response = await _client.put(
+            url,
+            data: body,
+            queryParameters: queryParameters,
+            options: Options(headers: headers),
+            cancelToken: cancelToken,
+          );
+          break;
+        case HttpMethod.DELETE:
+          response = await _client.delete(
+            url,
+            data: body,
+            queryParameters: queryParameters,
+            options: Options(headers: headers),
+            cancelToken: cancelToken,
+          );
+          break;
+      }
+      try {
+        /// dismiss progress dialog
+
+        // Get the decoded json
+        return response.data!  as Map<String ,dynamic >;
+      } on FormatException catch (e) {
+        /// dismiss progress dialog
+
+        debugPrint(e.toString());
+        throw e ;
+      } catch (e) {
+        /// dismiss progress dialog
+
+        debugPrint(e.toString());
+        throw e ;
       }
     }
     // Handling errors
@@ -268,25 +370,27 @@ class HttpClient {
       /// dismiss progress dialog
 
       print("e.response ${e.error}");
-      return Left(RemoteBaseModel.fromJson(e.response?.data));
+      throw e ;
     }
 
     // Couldn't reach out the server
     on SocketException catch (e) {
       /// dismiss progress dialog
 
-      return Left(RemoteBaseModel(message: e.message));
+      throw e ;
     } on HttpException catch (e) {
       /// dismiss progress dialog
 
-      return Left(RemoteBaseModel(message: e.message));
+      throw e ;
     } catch (e, s) {
       /// dismiss progress dialog
 
       print('catch error s$s');
-      return Left(RemoteBaseModel(message: e.toString()));
+      throw e ;
     }
   }
+
+
 
   Future<CommerceResult<RemoteBaseModel, T>> upload<T>({
     required String url,
@@ -348,38 +452,115 @@ class HttpClient {
     }
   }
 
-  BaseError _handleDioError<E>(DioError error) {
-    if (error.type == DioErrorType.other ||
-        error.type == DioErrorType.response) {
-      if (error.error is SocketException) return SocketError();
-      if (error.type == DioErrorType.response) {
-        switch (error.response!.statusCode) {
-          case 400:
-            return BadRequestError();
-          case 401:
-            return UnauthorizedError();
-          case 403:
-            return ForbiddenError();
-          case 404:
-            return NotFoundError();
-          case 409:
-            return ConflictError();
-          case 500:
-            return InternalServerError();
-          default:
-            return UnknownError();
-        }
+
+
+
+  Future<CommerceResult<RemoteBaseModel, Map<String ,dynamic> >> uploadMapResultWithMap<  T >({
+    required String url,
+    required String fileKey,
+     required MultipartFile  file  ,
+    Map<String, dynamic>? data,
+    Map<String, String>? headers,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+    required CancelToken cancelToken,
+  }) async {
+    Map<String, dynamic> dataMap = {};
+    if (data != null) {
+      dataMap.addAll(data);
+    }
+    dataMap.addAll({
+      fileKey:   file});
+    try {
+      Response<Map<String , dynamic >> response = await _client.post(
+        url,
+         data: FormData.fromMap(dataMap),
+
+        onSendProgress: onSendProgress?? (int sent, int total) {
+          print("send $sent $total");
+        } ,
+        onReceiveProgress: onReceiveProgress?? (int sent, int total) {
+          print(" rece $sent $total");
+        } ,
+        options: Options(headers: headers),
+        cancelToken: cancelToken,
+      );
+
+
+        // Get the decoded json
+        return  CommerceResult.data(response.data!);
+      } on FormatException {
+        return CommerceResult.error( RemoteBaseModel(message: FormatError().toString() ,));
+      } catch (e) {
+        return  CommerceResult.error( RemoteBaseModel(message: e.toString() ,));
       }
-      return UnknownError();
-    } else {
-      if (error.type == DioErrorType.connectTimeout ||
-          error.type == DioErrorType.sendTimeout ||
-          error.type == DioErrorType.receiveTimeout) {
-        return TimeoutError();
-      } else if (error.type == DioErrorType.cancel) {
-        return CancelError("Cancel by user");
-      } else
-        return UnknownError();
+
+    // Handling errors
+    on DioError catch (e) {
+      return CommerceResult.error( RemoteBaseModel (message: e.message));
+    }
+
+    on SocketException {
+      return  CommerceResult.error( RemoteBaseModel(message: SocketError().toString() ,));
+    } on HttpException {
+      return  CommerceResult.error( RemoteBaseModel(message: ConnectionError().toString() ,));
+    } catch (e, s) {
+      print('catch error s$s');
+      return  CommerceResult.error( RemoteBaseModel(message: e.toString() ,));
     }
   }
+
+  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel >> uploadMapResult<  T >({
+    required String url,
+    required String fileKey,
+    required MultipartFile  file  ,
+    Map<String, dynamic>? data,
+    Map<String, String>? headers,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+    required CancelToken cancelToken,
+  }) async {
+    Map<String, dynamic> dataMap = {};
+    if (data != null) {
+      dataMap.addAll(data);
+    }
+    dataMap.addAll({
+      fileKey:   file});
+    try {
+      Response<Map<String , dynamic >> response = await _client.post(
+        url,
+        data: FormData.fromMap(dataMap),
+
+        onSendProgress: onSendProgress?? (int sent, int total) {
+          print("send $sent $total");
+        } ,
+        onReceiveProgress: onReceiveProgress?? (int sent, int total) {
+          print(" rece $sent $total");
+        } ,
+        options: Options(headers: headers),
+        cancelToken: cancelToken,
+      );
+
+      return  CommerceResult.data( RemoteBaseModel(data: response.data! , status: StatusModel.success , message: response.data!["message"] ));
+    } on FormatException {
+      return CommerceResult.error( RemoteBaseModel(message: FormatError().toString() ,));
+    } catch (e) {
+      return  CommerceResult.error( RemoteBaseModel(message: e.toString() ,));
+    }
+
+    // Handling errors
+    on DioError catch (e) {
+      return CommerceResult.error( RemoteBaseModel (message: e.message));
+    }
+
+    on SocketException {
+      return  CommerceResult.error( RemoteBaseModel(message: SocketError().toString() ,));
+    } on HttpException {
+      return  CommerceResult.error( RemoteBaseModel(message: ConnectionError().toString() ,));
+    } catch (e, s) {
+      print('catch error s$s');
+      return  CommerceResult.error( RemoteBaseModel(message: e.toString() ,));
+    }
+  }
+
 }

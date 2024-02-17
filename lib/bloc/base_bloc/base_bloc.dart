@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
- import '../../utilis/models/base_model.dart';
+ import '../../utilis/models/remote_base_model.dart';
 import 'base_state.dart';
 
 class CommerceModuleBaseBloc<T> extends Cubit<CommerceModuleBaseState<T>> {

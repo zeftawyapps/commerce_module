@@ -1,5 +1,5 @@
 
-import '../models/base_model.dart';
+import '../models/remote_base_model.dart';
 
 class CommerceResult<Error extends RemoteBaseModel, Data> {
   final Data? data;

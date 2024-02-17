@@ -18,11 +18,11 @@ import 'package:flutter/material.dart';
     return firebaseCollection.add(mymap);
   }
 
-  Future<Object> editDataCloudFirestore({required String collection,
+  Future<Object> editDataCloudFirestore({required String path,
     required String id,
     required Map<String, dynamic> mymap}) async {
     CollectionReference firebaseCollection;
-    firebaseCollection = FirebaseFirestore.instance.collection(collection);
+    firebaseCollection = FirebaseFirestore.instance.collection(path);
     await firebaseCollection.doc(id).update(mymap);
     var docData = await  firebaseCollection.doc(id).get();
   return docData.data()! ;
@@ -44,10 +44,10 @@ import 'package:flutter/material.dart';
   }
 
   Future<void> deleteDataCloudFirestoreOneDocument(
-      {required String collection, required String id}) async {
+      {required String path, required String id}) async {
     await Firebase.initializeApp();
     CollectionReference firebaseCollection;
-    firebaseCollection = FirebaseFirestore.instance.collection(collection);
+    firebaseCollection = FirebaseFirestore.instance.collection(path);
     return firebaseCollection.doc(id).delete();
   }
   Future<void> deleteDataCloudFirestoreOneDocumentSubCollection(
@@ -72,7 +72,7 @@ import 'package:flutter/material.dart';
 
 
   Future<void> testFireStore() {
-    return addDataCloudFirestore(collection: "Test", mymap: {"name": "Moaz"});
+    return addDataCloudFirestore(path: "Test", mymap: {"name": "Moaz"});
   }
   Future<String> addDataCloudFirestoreSupCollection({required String collection,
     required String subCollection,
@@ -98,19 +98,19 @@ import 'package:flutter/material.dart';
   }
 
 
-  Future<String> addDataCloudFirestore({required String collection,
+  Future<String> addDataCloudFirestore({required String path,
     String? id,
     required Map<String, dynamic> mymap}) async {
     if (id == null|| id=="") {
       CollectionReference firebaseCollection;
-      firebaseCollection = FirebaseFirestore.instance.collection(collection);
+      firebaseCollection = FirebaseFirestore.instance.collection(path);
       await firebaseCollection.add(mymap).then((value) {
         this.firestoreDocmentid = value.id;
       });
     } else {
       firestoreDocmentid = id;
       CollectionReference firebaseCollection;
-      firebaseCollection = FirebaseFirestore.instance.collection(collection);
+      firebaseCollection = FirebaseFirestore.instance.collection(path);
       await  firebaseCollection.doc(id).set(mymap);
 
     }
