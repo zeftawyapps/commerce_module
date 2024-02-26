@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:commerce_module/utilis/models/remote_base_model.dart';
-import 'package:commerce_module/utilis/result/result.dart';
-import '../../constes/collections.dart';
+ import '../../constes/collections.dart';
 import '../../interface/sources/i_base_source.dart';
 import '../../interface/sources/i_json_base_source.dart';
 import '../../model/quiz/depratment.dart';
@@ -11,7 +9,9 @@ import '../../model/services/catigory.dart';
 import '../../utilis/firebase/firebase.dart';
 import '../../utilis/firebase/firebase_and_storage_action.dart';
 import '../../utilis/models/base_data_model.dart';
+import '../../utilis/models/remote_base_model.dart';
 import '../../utilis/models/staus_model.dart';
+import '../../utilis/result/result.dart';
 
 class FirebaseCRUDSource
     implements ICommerceResultBaseCRUDSource<BaseDataModel> {
@@ -36,7 +36,7 @@ class FirebaseCRUDSource
   }
 
   @override
-  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel>> addDataItem() async {
+  Future<Result<RemoteBaseModel, RemoteBaseModel>> addDataItem() async {
     var result;
     try {
       if (file != null) {
@@ -49,15 +49,15 @@ class FirebaseCRUDSource
         result = await _fireStoreAction.addDataCloudFirestore(
             path: collectionName, mymap: data!.toJson());
       }
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel>.data(result);
+      return Result<RemoteBaseModel, RemoteBaseModel>.data(result);
     } on Exception catch (e) {
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel>.error(
+      return Result<RemoteBaseModel, RemoteBaseModel>.error(
           RemoteBaseModel(message: e.toString(), status: StatusModel.error));
     }
   }
 
   @override
-  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel>> deleteDataItem(
+  Future<Result<RemoteBaseModel, RemoteBaseModel>> deleteDataItem(
       String id) async {
     var result;
     try {
@@ -69,15 +69,15 @@ class FirebaseCRUDSource
             path: collectionName, id: id);
       }
       result = RemoteBaseModel(message: "Deleted", status: StatusModel.success);
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel>.data(result);
+      return Result<RemoteBaseModel, RemoteBaseModel>.data(result);
     } on Exception catch (e) {
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel>.error(
+      return Result<RemoteBaseModel, RemoteBaseModel>.error(
           RemoteBaseModel(message: e.toString(), status: StatusModel.error));
     }
   }
 
   @override
-  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel<List<BaseDataModel>>>>
+  Future<Result<RemoteBaseModel, RemoteBaseModel<List<BaseDataModel>>>>
       getDataList()async  {
     try {
       var result;
@@ -91,16 +91,16 @@ class FirebaseCRUDSource
             path: collectionName,
             builder: (data, id) => BaseDataModel.fromJson(data!),);
       }
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel<List<BaseDataModel>>>.data(result);
+      return Result<RemoteBaseModel, RemoteBaseModel<List<BaseDataModel>>>.data(result);
     } on Exception catch (e) {
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel<List<BaseDataModel>>>.error(
+      return Result<RemoteBaseModel, RemoteBaseModel<List<BaseDataModel>>>.error(
           RemoteBaseModel(message: e.toString(), status: StatusModel.error));
     }
   }
 
 
   @override
-  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel<BaseDataModel>>>
+  Future<Result<RemoteBaseModel, RemoteBaseModel<BaseDataModel>>>
       getSingleData(String id) async {
     try {
       var data = await _firebaseLoadingData.loadSingleDocData(
@@ -108,16 +108,16 @@ class FirebaseCRUDSource
       var result = BaseDataModel.fromJson(data!);
       var dataresult  = RemoteBaseModel<BaseDataModel>(
           data: result, status: StatusModel.success);
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel<BaseDataModel>>.data(dataresult);
+      return Result<RemoteBaseModel, RemoteBaseModel<BaseDataModel>>.data(dataresult);
     } on Exception catch (e) {
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel<BaseDataModel>>.error(
+      return Result<RemoteBaseModel, RemoteBaseModel<BaseDataModel>>.error(
           RemoteBaseModel(message: e.toString(), status: StatusModel.error));
     }
 
   }
 
   @override
-  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel>> updateDataItem(
+  Future<Result<RemoteBaseModel, RemoteBaseModel>> updateDataItem(
       String id)async  {
     var result;
     try {
@@ -133,9 +133,9 @@ class FirebaseCRUDSource
             id: id,
             mymap: data!.toJson());
       }
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel>.data(result);
+      return Result<RemoteBaseModel, RemoteBaseModel>.data(result);
     } on Exception catch (e) {
-      return CommerceResult<RemoteBaseModel, RemoteBaseModel>.error(
+      return Result<RemoteBaseModel, RemoteBaseModel>.error(
           RemoteBaseModel(message: e.toString(), status: StatusModel.error));
     }
   }

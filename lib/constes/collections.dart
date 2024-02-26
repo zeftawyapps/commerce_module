@@ -4,4 +4,5 @@ class CollectionsName{
   static String departmentData = "departmentData";
   static String categoryData = "categoryData";
   static String orderData = "orderData";
+  static String usersAccountData = "usersAccountData";
 }

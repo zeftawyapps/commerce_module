@@ -1,4 +1,5 @@
-import 'package:commerce_module/utilis/models/staus_model.dart';
+
+import 'package:JoDija_DataSource/utilis/models/staus_model.dart';
 
 class RemoteBaseModel<T> {
 

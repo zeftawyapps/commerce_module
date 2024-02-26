@@ -1,4 +1,5 @@
-import 'package:commerce_module/https/i_http_urls.dart';
+
+import 'i_http_urls.dart';
 
 class ProductBaseUrls extends HttpUrls {
   // create instance UsersHttpUrls

@@ -6,10 +6,10 @@ import '../../utilis/result/result.dart';
 
 abstract class ICommerceResultBaseCRUDSource<T extends BaseDataModel>   {
 
-  Future<CommerceResult<RemoteBaseModel, RemoteBaseModel>> addDataItem();
-  Future <CommerceResult<RemoteBaseModel, RemoteBaseModel>> updateDataItem(String id);
-  Future <CommerceResult<RemoteBaseModel, RemoteBaseModel>> deleteDataItem(String id);
-  Future <CommerceResult<RemoteBaseModel, RemoteBaseModel<List<T>>  >> getDataList();
-  Future <CommerceResult<RemoteBaseModel, RemoteBaseModel<T>>> getSingleData(String id);
+  Future<Result<RemoteBaseModel, RemoteBaseModel>> addDataItem();
+  Future <Result<RemoteBaseModel, RemoteBaseModel>> updateDataItem(String id);
+  Future <Result<RemoteBaseModel, RemoteBaseModel>> deleteDataItem(String id);
+  Future <Result<RemoteBaseModel, RemoteBaseModel<List<T>>  >> getDataList();
+  Future <Result<RemoteBaseModel, RemoteBaseModel<T>>> getSingleData(String id);
 
 }

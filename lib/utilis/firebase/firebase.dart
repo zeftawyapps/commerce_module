@@ -108,7 +108,22 @@ class FirebaseLoadingData {
   }
 
  // load quiz data
+  List<Map<String, dynamic>> getDataSnapshotOpjectToMap(QuerySnapshot snapshot,
+      {String? idcell}) {
+    List<Map<String, dynamic>> getlist = <Map<String, dynamic>>[];
 
+    QuerySnapshot qs = snapshot;
+    qs.docs.map((doc) {
+      Map<String, dynamic> docmap = Map();
+      docmap = doc.data()! as Map<String, dynamic>;
+      if (idcell != null) {
+        docmap.addAll({idcell: doc.id});
+      }
+      getlist.add(docmap);
+    }).toList();
+
+    return getlist;
+  }
    Future<Map<String, dynamic>?> loadSingleDocData(
       String collectin, String id) async {
     CollectionReference firebaseCollection;
